@@ -75,7 +75,7 @@ if __name__ == "__main__":
   start_time = time.time()
 
   my_dict = {}
-  dates = df['Date'].iloc[0:1]
+  dates = df['Date'].iloc[0:100]
 
   for date in dates:
     data = flight_df(date)
