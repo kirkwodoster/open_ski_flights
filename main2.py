@@ -53,46 +53,35 @@ date = df['Date']
 filepath = f'data/{year}.csv'
 
 def flight_df(dates):
+  my_dict[dates] = []
   interval_list = time_stamp_interval(dates)
   int_length = len(interval_list)
   departure_list = []
-  futures = []
-  for k in range(0, int_length-1):
-    try:
-      departure_inputs = (interval_list[k], interval_list[k+1])
-      departures = executor.submit(api.get_flights_from_interval,*departure_inputs)
-      futures.append(departures)
+  for j in ICAO:
+    for k in range(0, int_length-1):
+      try:
+        departures = api.get_departures_by_airport(j, interval_list[k], interval_list[k+1])
+        dep_length = len(departures)
+        departure_list.append(dep_length)
+      except:
+        None
 
-    except Exception as e:
-      print(f'Error: {e}')
-  for future in futures:
-   output = future.result()
-   total_flights = find_ICAO(ICAO=ICAO, open_sky_data=output)
-   departure_list.append(total_flights)
   total_departures = np.array(departure_list).sum()
   return total_departures
+  # print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == "__main__":
-
+    
   start_time = time.time()
 
-  start_time = time.time()
-  executor = ThreadPoolExecutor()
-  futures = []
+  my_dict = {}
+  dates = df['Date'].iloc[0:1]
 
-  date_period = df[df['Date'].dt.year == year].Date.iloc[3:5]
-  for i in date_period:
-    future = executor.submit(flight_df, (i))
-    futures.append(future)
-
-  for date, future in zip(date_period, futures):
-    print_future = future.result()
-    date = date.strftime('%Y-%m-%d')
+  for date in dates:
+    data = flight_df(date)
 
     with open(filepath, 'a', newline='') as file:
       writer = csv.writer(file)
-      
-      writer.writerow([date, print_future])
-  
+      writer.writerow([date, data])
 
   print("--- %s seconds ---" % (time.time() - start_time))
